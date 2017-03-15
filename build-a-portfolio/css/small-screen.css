@@ -1,0 +1,68 @@
+* {
+    margin: 0 auto;
+/*    background-color: #ededed;*/
+}
+
+.container {
+    text-align: center;
+    width: 100%
+}
+
+.box1 {
+    width: 100%;
+    order: 2;
+}
+
+.box2 {
+    width: 100%;
+    order: 3;
+    min-height: 10vh;
+    margin-bottom: 15px;
+}
+
+.box3 {
+    width: 100%;
+    order: 1;
+}
+
+.header-logo{
+    display: none;
+}
+
+.menu {
+    background-color: white;
+}
+
+li {
+    display: inline-block;
+    padding: 10px;
+}
+
+.footer-logo {
+    padding-top: 10px;
+    padding-bottom: 5px;
+}
+
+h4, p {
+    color: gray;
+    padding: 10px;
+}
+
+p {
+    padding-top: 0px;
+    font-weight: 100;
+}
+
+span {
+    background-color: white;
+    padding: 3px;
+}
+
+img {
+    max-width: 95%;
+    border: 10px solid white;
+}
+
+.projects {
+    margin-top: 15px;
+}

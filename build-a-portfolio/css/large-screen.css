@@ -1,0 +1,83 @@
+.box1 {
+    width: 25%;
+    height: 100vh;
+    order: 1;
+}
+
+.box2 {
+    width: 67%;
+    order: 2;
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+
+.box3 {
+    width: 8%;
+    height: 100vh;
+    order: 3;
+} 
+
+.footer-logo {
+    display: none;
+}
+
+.menu, .social {
+    height: 50vh;
+    margin-top: 10vh;
+    padding-top: 30vh;
+    text-align: left;
+}
+
+.menu {
+    padding-left: 10%;
+}
+
+.social {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.header-logo, .menu, .footer-logo, .social {
+    position: fixed;
+}
+
+.projects {
+    width: 30%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    text-align: center;
+    background-color: white;
+    padding-bottom: 10px;
+}
+
+img {
+    max-width: 90%;
+}
+
+h4, p {
+    color: gray;
+    padding: 10px;
+}
+
+p {
+    padding-top: 0px;
+    font-weight: 100;
+}
+
+span {
+    display: none;
+}
+
+.header-logo {
+    padding-left: 50px;
+    padding-top: 30px;
+    font-size: 40px;
+}
+
+.social-list {
+    padding: 10px;
+}

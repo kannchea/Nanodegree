@@ -1,0 +1,49 @@
+* {
+    margin: 0 auto;
+    font-family: 'Lato', sans-serif;
+    color: #af4809;
+/*    outline: 1px solid black;*/
+}
+
+.container {
+    background-color: #ededed;
+    min-height: 20px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+/* zocial */
+[class*="fontawesome-"]:before {
+  font-family: 'fontawesome', sans-serif;
+  font-size: 30px;
+}
+
+/* zocial */
+[class*="maki-"]:before {
+  font-family: 'maki', sans-serif;
+  font-size: 15px;
+  color: gainsboro;
+}
+
+ul {
+    list-style-type: none;
+    margin: auto;
+    padding: 0;
+}
+
+a.active {
+    color: gray;
+}
+
+a {
+    text-decoration: none;
+}
+
+.visit-site {
+    border: 1px solid gray;
+    padding: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+    color: black;
+    line-height: 30px;
+}
