@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>New Post</title>
+        <style>
+            * {
+                font-family: sans-serif;
+                color: gray;
+                margin: auto;
+            }
+            
+            input {
+                width: 80%;
+                height: 20px;
+                margin: 10px;
+                font-size: 14px;
+            }
+            
+            textarea {
+                width: 80%;
+                height: 200px;
+                margin: 10px;
+                font-size: 14px;
+            }
+            
+            button {
+                width: 100px;
+                height: 30px;
+                border-radius: none;
+                font-size: 16px;
+                background-color: lightseagreen;
+                color: white;
+                border-style: none;
+            }
+            
+            #banner {
+                height: 100px;
+                width: 100%;
+                background-color: lightseagreen;
+                margin-bottom: 20px;
+                text-align: right;
+                font-size: 28px;
+                font-family: sans-serif;
+                color: white;
+                line-height: 80px;
+            }
+            
+            a {
+                margin-right: 60px;
+                font-size: 20px;
+                text-decoration: none;
+            }
+            
+            p {
+                color: red;
+            }
+            
+        </style>
+    </head>
+    <body>
+        <div class="container" style="text-align: center;">
+            <div id="banner"><a href="/blog">Go to Blog</a></div>
+            <h2>Enter Your Favorite Song Lyrics</h2>
+            <form method="post">
+                <input type="text" name="subject" placeholder="Title" value={{subject}}>
+                <br>
+                <textarea type="text" name="content" placeholder="Lyrics">{{content}}</textarea>
+                <br>
+                <p>{{error}}</p>
+                <button>POST</button>
+            </form>
+        </div>
+    </body>
+</html>

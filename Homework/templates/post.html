@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>New Post</title>
+        <style>         
+            * {
+                color: gray;
+                margin: auto;
+            }
+            
+            #banner {
+                height: 100px;
+                width: 100%;
+                background-color: lightseagreen;
+                margin-bottom: 20px;
+                text-align: center;
+                font-size: 28px;
+                font-family: sans-serif;
+                color: white;
+                line-height: 80px;
+            }
+            
+            .post {
+                width: 90%;
+            }
+            
+            hr {
+                margin-top: 5px;
+                margin-bottom: 10px;
+            }
+            
+            a {
+                font-size: 20px;
+                text-decoration: none;
+            }
+            
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div id="banner">{{post.subject}}
+                <a href="/blog" style="float: left; margin-left: 60px;">Go to Blog</a>
+                <a href="/blog/newpost" style="float:right; margin-right: 60px;">Add Lyrics</a>
+            </div>
+            <div class="post">
+                <pre class="lyrics">{{post.content}}</pre>
+            </div>
+        </div>
+    </body>
+</html>
