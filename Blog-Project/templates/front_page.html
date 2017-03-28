@@ -27,8 +27,8 @@
                                     <li class="content-list">{{post.created_by}}</li>
                                     <li class="content-list">{{post.created.strftime("%b %d, %Y")}}</li>
                                     <li class="content-list"><span class="fontawesome-comments-alt lightseagreen"></span>&nbsp;{{post.comment}}</li>
-                                    <li class="content-list"><button name="val" value="{{post.key().id()}},dislike" class="rate-button"><span class="fontawesome-thumbs-down lightseagreen"></span></button></li>
-                                    <li class="content-list"><button name="val" value="{{post.key().id()}},like" class="rate-button"><span class="fontawesome-thumbs-up lightseagreen"></span></button>&nbsp;{{post.like}}</li>
+                                    <li class="content-list"><button name="action" value="{{post.key().id()}},dislike" class="rate-button"><span class="fontawesome-thumbs-down lightseagreen"></span></button></li>
+                                    <li class="content-list"><button name="action" value="{{post.key().id()}},like" class="rate-button"><span class="fontawesome-thumbs-up lightseagreen"></span></button>&nbsp;{{post.like}}</li>
                                 </form>
                             </ul>
                         </div>

@@ -133,6 +133,10 @@ a {
     font-size: 24px;
 }
 
+.post_url {
+    color: gray;
+}
+
 .created {
     width: 50%;
     float: right;

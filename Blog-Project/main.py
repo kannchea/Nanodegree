@@ -107,31 +107,40 @@ class Welcome(Handler):
         username = self.request.cookies.get('name')
         
         if username:
-            val = self.request.get('val')
-
-            post_id = val.split(',')[0]
-            vote = val.split(',')[1]
-
+            error = ''
+            action = self.request.get('action')
+            post_id = action.split(',')[0]
+            action = action.split(',')[1]
             key = db.Key.from_path('Post', int(post_id))
             post = db.get(key)
-            
-            if post.created_by == username:
-                error = "You can't like/dislike your own post."
-                posts = db.GqlQuery("select * from Post order by created DESC limit 10")
-                self.render("welcome.html", posts=posts, username=username, error=error)
                 
-            else:
-                if vote == 'like':  
-                    post.like += 1
-                    print post.like 
+            if action == 'delete':
+                if post.created_by == username:
+                    post.delete()
                 else:
-                    post.like -= 1
+                    error = "You can only delete your post."
 
-                post.put()
+            elif action == 'edit':
+                if post.created_by == username:
+                    self.redirect('/edit?post_id=%s' % post_id)
+                else:
+                    error = "You can only edit your post"
 
-                posts = db.GqlQuery("select * from Post order by created DESC limit 10")
+            ##### Like or Dislike
+            else:
+                if post.created_by == username:
+                    error = "You can't like/dislike your own post."
+                else:
+                    if vote == 'like':  
+                        post.like += 1
+                        print post.like 
+                    else:
+                        post.like -= 1
 
-                self.render("welcome.html", posts=posts, username=username)
+                    post.put()
+                    
+            posts = db.GqlQuery("select * from Post order by created DESC limit 10")
+            self.render("welcome.html", posts=posts, username=username, error=error)
         
         else:
             self.redirect('/login')
@@ -163,6 +172,34 @@ class NewPost(Handler):
             self.render("newpost.html", subject=subject, content=content, error=error, username=username)
             
 
+#### Edit post
+class Edit(Handler):
+    def get (self):
+        username = self.request.cookies.get('name')
+        post_id = self.request.get('post_id')
+        key = db.Key.from_path('Post', int(post_id))
+        post = db.get(key)
+        self.render("edit.html", subject=post.subject, content=post.content, username=username)
+        
+    def post (self):
+        username = self.request.cookies.get('name')
+        subject = self.request.get('subject')
+        content = self.request.get('content')
+        
+        post_id = self.request.get('post_id')
+        key = db.Key.from_path('Post', int(post_id))
+        post = db.get(key)
+        
+        if subject and content:
+            post.subject = subject
+            post.content = content
+            post.put()
+            
+            self.redirect("/%s" % str(post.key().id()))
+        else:
+            error = "subject and content please!"
+            self.render("newpost.html", subject=subject, content=content, error=error, username=username)
+            
 #### Handle post after user add new post
 class PostHandler(Handler):
     def get(self, post_id):
@@ -290,6 +327,7 @@ app = webapp2.WSGIApplication([
     ('/welcome', Welcome),
     ('/profile', Profile),
     ('/newpost', NewPost),
+    ('/edit', Edit),
     ('/([0-9]+)', PostHandler),
     ('/signup', SignUp),
     ('/login', Login),
