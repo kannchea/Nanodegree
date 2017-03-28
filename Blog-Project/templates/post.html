@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content%}
+    <div class="post">
+            <div class="title">{{post.subject}}</div>
+            <div class="created">
+                <ul>
+                    <li class="content-list">{{post.created_by}}</li>
+                    <li class="content-list">{{post.created.strftime("%b %d, %Y")}}</li>
+                    <li class="content-list"><span class="fontawesome-comments-alt lightseagreen"></span>&nbsp;Comment</li>
+                    <li class="content-list"><span class="fontawesome-thumbs-down lightseagreen"></span>&nbsp;{{post.dislike}}</li>
+                    <li class="content-list"><span class="fontawesome-thumbs-up lightseagreen"></span>&nbsp;{{post.like}}</li>
+                </ul>
+            </div>
+            <div class="content">
+                <pre class="lyrics">{{post.content}}</pre>
+            </div>
+        </div>
+{% endblock %}

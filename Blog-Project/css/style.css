@@ -1,0 +1,162 @@
+* {
+    color: gray;
+    margin: auto;
+}
+
+/* font-awesome */
+[class*="fontawesome-"]:before {
+  font-family: 'fontawesome', sans-serif;
+}
+
+#banner {
+    height: 80px;
+    width: 100%;
+    background-color: lightseagreen;
+    margin-bottom: 50px;
+    text-align: right;
+    font-size: 20px;
+    font-family: sans-serif;
+    line-height: 80px;
+}
+
+#welcome {
+    font-size: 22px;
+    color: white;
+}
+
+#contents {
+    text-align: center;
+    margin: auto auto;
+}
+
+.post {
+    width: 90%;
+    margin-bottom: 30px;
+    text-align: left;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.title {
+    width: 40%;
+    order: 1;
+}
+
+.created {
+    width: 60%;
+    order: 2;
+}
+
+.content {
+    width: 100%;
+    order: 3;
+    border-top: 1px solid gray;
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+
+hr {
+    display: none;
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+
+input {
+    width: 320px;
+    height: 20px;
+    margin: 2px;
+    font-size: 14px;
+}
+
+textarea {
+    width: 320px;
+    height: 400px;
+    margin: 10px;
+    font-size: 14px;
+}
+
+button {
+    width: 100px;
+    height: 30px;
+    border-radius: none;
+    font-size: 16px;
+    background-color: lightseagreen;
+    color: white;
+    border-style: none;
+}
+
+.rate-button {
+    background-color: white;
+    width: 30px;
+    cursor: pointer;
+}
+
+.error {
+    color: red;
+    padding-bottom: 10px;
+}
+
+h2 {
+    padding: 10px;
+}
+
+ul {
+    list-style-type: none;
+    margin-right: 10px;
+}
+
+li {
+    display: inline-block;
+}
+
+a {
+    text-decoration: none;
+    color: white;
+}
+
+.banner-list {
+    padding: 20px;
+    font-size: 30px;  
+}
+
+.content-list {
+    padding-left: 20px;
+}
+
+.content-list:last-child {
+    padding-left: 0;
+}
+
+.title {
+    width: 50%;
+    float: left;
+    font-size: 24px;
+}
+
+.created {
+    width: 50%;
+    float: right;
+    text-align: right;
+}
+
+.lightseagreen {
+    color: lightseagreen;
+}
+
+@media screen and (max-width: 940px) {
+    .title {
+        width: 100%;
+        order: 1;
+    }
+
+    .created {
+        width: 100%;
+        order: 3;
+        border-top: 1px solid gray;
+    }
+
+    .content {
+        width: 100%;
+        order: 2;
+    }
+}

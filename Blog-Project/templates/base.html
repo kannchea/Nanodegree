@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>My Blog</title>
+        
+        <link href="http://weloveiconfonts.com/api/?family=fontawesome" rel="stylesheet">
+        <link type="text/css" rel="stylesheet" href="/css/style.css"/>
+        
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    </head>
+    <body>
+        <div class="container">
+            <div id="banner">
+                <ul>
+                    <li class="banner-list" id="welcome">Welcome {{username}}!</li>
+                    <li class="banner-list"><a href="/profile"><span class="fontawesome-user"></span></a></li>
+                    <li class="banner-list"><a href="/"><span class="fontawesome-home"></span></a></li>
+                    <li class="banner-list"><a href="/newpost"><span class="fontawesome-plus-sign-alt"></span></a></li> 
+                    <li class="banner-list"><a href="/logout"><span class="fontawesome-signout"></span></a></li>
+                </ul>
+            </div>
+            <div id="contents">
+                {% block content %}
+                {% endblock %}
+            </div>
+        </div>
+    </body>
+</html>

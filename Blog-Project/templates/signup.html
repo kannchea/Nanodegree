@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>My Blog</title>
+        
+        <link type="text/css" rel="stylesheet" href="/css/style.css"/>
+    </head>
+    <body>
+        <div class="container">
+            <div id="banner">
+                <ul>
+                    <li class="banner-list"><a href="/"><span class="fontawesome-home"></span></a></li>
+                    <li class="banner-list"><a href="/login">Login</a></li>
+                </ul>
+            </div>
+            <div id="contents">
+                <h2>Signup</h2>
+                <form method="post">              
+                    <input type="text" name="username" value="{{username}}" placeholder="Username">
+                    <p class="error">{{username_err}}</p>
+                    <input type="password" name="password" placeholder="Password">
+                    <p class="error">{{password_err}}</p>
+                    <input type="password" name="verify" placeholder="Verify Password">
+                    <p class="error">{{verify_err}}</p>
+                    <input type="text" name="email" value="{{email}}" placeholder="Email(optional)">
+                    <p class="error">{{email_err}}</p>
+                    <button>Submit</button>
+                </form>
+            </div>
+        </div>
+    </body>
+</html>

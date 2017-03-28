@@ -23,10 +23,13 @@ import hashlib
 
 from google.appengine.ext import db
 
+#### Global Variables
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 PASSWORD_RE = re.compile(r"^.{3,20}$")
 EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
 
+#### Global Method
+##### User's Info Validation
 def render_str(template, **params):
     t = jinja_env.get_template(template)
     return t.render(params)
@@ -39,9 +42,39 @@ def valid_password(password):
 def valid_email(email):
     return EMAIL_RE.match(email)
 
+##### Hash Password
+def make_salt():
+    return ''.join(random.choice(string.lowercase) for i in range (5))
+
+def make_pw_hash(name, pw):
+    salt = make_salt()
+    h = hashlib.sha256(name + pw + salt).hexdigest()
+    return '%s,%s' % (h, salt)
+
+##### Validate Password
+def valid_pw(name, pw, h):
+    salt = h.split(",")[1]
+    hash_pw = hashlib.sha256(name + pw + salt).hexdigest()
+    return hash_pw == h.split(',')[0]
+
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir), autoescape = True)
 
+#### User Instance
+class User(db.Model):
+    name = db.StringProperty(required = True)
+    pw_hash = db.StringProperty(required = True)
+    email = db.StringProperty()
+
+#### Post Instance
+class Post(db.Model):
+    subject = db.StringProperty(required = True)
+    content = db.TextProperty(required = True)
+    created = db.DateTimeProperty(auto_now_add = True)
+    created_by = db.StringProperty(required = True)
+    like = db.IntegerProperty(default = 0)
+
+#### Base class Handler
 class Handler(webapp2.RequestHandler):
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
@@ -53,94 +86,60 @@ class Handler(webapp2.RequestHandler):
     def render(self, template, **kw):
         self.write(self.render_str(template, **kw))
 
-class MainPage(webapp2.RequestHandler):
+#### Front Page 
+class FrontPage(Handler):
     def get(self):
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.write('Hello! Welcome to my Nanodegree projects')
-        
-        
-class Rot13(Handler):
-    def get(self):
-        self.render("rot13.html")
-        
+        username = self.request.cookies.get('name')
+        posts = db.GqlQuery("select * from Post order by created DESC limit 10")
+        self.render("front_page.html", posts=posts, username=username)
     def post(self):
+        username = self.request.cookies.get('name')
+        val = self.request.get('val')
         
-        text = self.request.get("text")
-        rot13 = string.maketrans("ABCDEFGHIJKLMabcdefghijklmNOPQRSTUVWXYZnopqrstuvwxyz","NOPQRSTUVWXYZnopqrstuvwxyzABCDEFGHIJKLMabcdefghijklm")
+        post_id = val.split(',')[0]
+        vote = val.split(',')[1]
         
-        text = text.encode('utf8')
-        text = string.translate(text, rot13)
-        self.render("rot13.html", text=text)
-
+        key = db.Key.from_path('Post', int(post_id))
+        post = db.get(key)
         
-class Signup(Handler):
-    def get(self):
-        self.render("signup.html")
-    
-    def post(self):
-        
-        user_name = self.request.get('username')
-        pass_word = self.request.get('password')
-        email_    = self.request.get('email')
-        
-        username = valid_username(user_name)
-        password = valid_password(pass_word)
-        verify = self.request.get('verify')
-        email = valid_email(email_)
-        
-        username_err = ""
-        password_err = ""
-        verify_err   = ""
-        email_err    = ""
-        
-        checker = False
-        
-        if not (username):
-            username_err = "That's not a valid username."
-            checker = True 
-        if not (password):
-            password_err = "That wasn't a valid password."
-            checker = True
-        if (password):
-            if not verify or (verify != pass_word):
-                verify_err   = "Your passwords didn't match."
-                checker = True
-        if (email_):
-            if not (email):
-                email_err    = "That's not a valid email."
-                checker = True
-        
-        if checker:
-            self.render("signup.html", username=user_name, username_err=username_err, password_err = password_err, verify_err=verify_err, email_err=email_err, email=email_)
+        if vote == 'like':  
+            post.like += 1
         else:
-            self.redirect("/welcome?username=" + user_name)
+            post.like -= 1
             
-class Welcome(Handler):
+        post.put()
+                    
+        posts = db.GqlQuery("select * from Post order by created DESC limit 10")
+        self.render("front_page.html", posts=posts, username=username)
+        
+#### Profile Page
+class Profile(Handler):
     def get(self):
-        self.render("welcome.html", username=self.request.get('username'))
-
+        username = self.request.cookies.get('name')
+        posts = Post.all().filter('created_by =', username)
+        self.render("profile.html", posts=posts, username=username)
         
-class Blog(Handler):
-    def get (self):
-        posts = db.GqlQuery("select * from Post order by created DESC")
-        self.render("blog.html", posts=posts)
-        
+#### Add new post
 class NewPost(Handler):
     def get (self):
-        self.render("newpost.html")
+        username = self.request.cookies.get('name')
+        self.render("newpost.html", username=username)
         
     def post (self):
+        username = self.request.cookies.get('name')
         subject = self.request.get('subject')
         content = self.request.get('content')
         
         if subject and content:
-            p = Post(subject=subject, content=content)
+            p = Post(subject=subject, content=content, created_by = username, like = 0, dislike = 0)
             p.put()
-            self.redirect("/blog/%s" % str(p.key().id()))
+            self.redirect("/%s" % str(p.key().id()))
         else:
             error = "subject and content please!"
-            self.render("newpost.html", subject=subject, content=content, error=error)
+            self.render("newpost.html", subject=subject, content=content, error=error, username=username)
             
+
+#### Handle post after user add new post
 class PostHandler(Handler):
     def get(self, post_id):
         key = db.Key.from_path('Post', int(post_id))
@@ -150,39 +149,15 @@ class PostHandler(Handler):
             self.error(404)
             return
         
-        self.render("post.html", post = post)
-            
-class Post(db.Model):
-    subject = db.StringProperty(required = True)
-    content = db.TextProperty(required = True)
-    created = db.DateTimeProperty(auto_now_add = True)
-    
-    def render(self):
-        return render_str("post.html", post = self)
+        username = self.request.cookies.get('name')
+        self.render("post.html", post = post, username=username)
         
-        
-        
-#####Unit 4 Homework
-
-def make_salt():
-    return ''.join(random.choice(string.lowercase) for i in range (5))
-
-def make_pw_hash(name, pw):
-    salt = make_salt()
-    h = hashlib.sha256(name + pw + salt).hexdigest()
-    return '%s, %s' % (h, salt)
-
-def valid_pw(name, pw, h):
-    salt = h.split(",")[1]
-    hash_pw = hashlib.sha256(name + pw + salt).hexdigest()
-    return hash_pw == h.split(',')[0]
-
-class Signup4(Handler):
+#### Sign Up
+class SignUp(Handler):
     def get(self):
-        self.render("signup4.html")
+        self.render('signup.html')
     
     def post(self):
-        
         user_name = self.request.get('username')
         pass_word = self.request.get('password')
         email_    = self.request.get('email')
@@ -202,6 +177,11 @@ class Signup4(Handler):
         if not (username):
             username_err = "That's not a valid username."
             checker = True 
+        if username:
+            u = User.all().filter('name =', user_name).get()
+            if u:
+                username_err = "That user already exists."
+                return self.render("signup.html", username=user_name, username_err=username_err, password_err = password_err, verify_err=verify_err, email_err=email_err, email=email_)
         if not (password):
             password_err = "That wasn't a valid password."
             checker = True
@@ -215,20 +195,27 @@ class Signup4(Handler):
                 checker = True
         
         if checker:
-            self.render("signup4.html", username=user_name, username_err=username_err, password_err = password_err, verify_err=verify_err, email_err=email_err, email=email_)
-        else:
+            self.render("signup.html", username=user_name, username_err=username_err, password_err = password_err, verify_err=verify_err, email_err=email_err, email=email_)
             
+        else:
             password=make_pw_hash(user_name, pass_word)
+            
+            u = User(name=user_name, pw_hash=password, email=email_)
+            u.put()
+            
             cookie_val = "name=" + user_name + "; password=" + password + "; Path=/"
             cookie_val = cookie_val.encode('utf8')
             self.response.headers.add_header('Set-Cookie', cookie_val)
-            self.redirect("/blog/welcome")
-
-class Welcome4(Handler):
-    def get(self):
-        username = self.request.cookies.get('name')
-        self.render("welcome4.html", username=username)
-
+            self.redirect("/")
+        
+        
+##### Welcome page
+#class Welcome(Handler):
+#    def get(self):
+#        username = self.request.cookies.get('name')
+#        self.render("welcome.html", username=username)
+        
+#### Login
 class Login(Handler):
     def get(self):
         self.render("login.html")
@@ -249,33 +236,37 @@ class Login(Handler):
         if not (password):
             error = "Invalid login."
             checker = True
-        
+        if password and username:
+            u = User.all().filter('name =', user_name).get()
+            if u:
+                valid = valid_pw(user_name, pass_word, u.pw_hash)
+                if not valid:
+                    error = "Invalid login."
+                    checker = True
+            else:
+                error = "Invalid login."
+                checker = True
         if checker:
-            self.render("login.html", username=username, error = error)
-        else:           
+            self.render("login.html", username=user_name, error = error)
+        else:
             password=make_pw_hash(user_name, pass_word)
             cookie_val = "name=" + user_name + "; password=" + password + "; Path=/"
             cookie_val = cookie_val.encode('utf8')
             self.response.headers.add_header('Set-Cookie', cookie_val)
-            self.redirect("/blog/welcome")
-            
+            self.redirect("/")
 
+#### Logout
 class Logout(Handler):
     def get(self):
         self.response.headers.add_header('Set-Cookie', "name=; password=; Path=/")
-        self.redirect('/blog/signup')
-
-            
+        self.redirect('/signup')
+        
 app = webapp2.WSGIApplication([
-    ('/', MainPage), 
-    ('/rot13', Rot13), 
-    ('/signup', Signup), 
-    ('/welcome', Welcome),
-    ('/blog/?', Blog),
-    ('/blog/newpost', NewPost),
-    ('/blog/([0-9]+)', PostHandler),
-    ('/blog/signup', Signup4),
-    ('/blog/welcome', Welcome4),
-    ('/blog/login', Login),
-    ('/blog/logout', Logout)
+    ('/', FrontPage),
+    ('/profile', Profile),
+    ('/newpost', NewPost),
+    ('/([0-9]+)', PostHandler),
+    ('/signup', SignUp),
+    ('/login', Login),
+    ('/logout', Logout),
 ], debug=True)
