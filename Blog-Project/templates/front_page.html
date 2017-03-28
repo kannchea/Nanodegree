@@ -1,23 +1,43 @@
-{% extends "base.html" %}
-
-{% block content%}
-    {% for post in posts %}
-        <div class="post">
-            <div class="title">{{post.subject}}</div>
-            <div class="created">
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>My Blog</title>
+        
+        <link href="http://weloveiconfonts.com/api/?family=fontawesome" rel="stylesheet">
+        <link type="text/css" rel="stylesheet" href="/css/style.css"/>
+        
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    </head>
+    <body>
+        <div class="container">
+            <div id="banner">
                 <ul>
-                    <form method="post">
-                        <li class="content-list">{{post.created_by}}</li>
-                        <li class="content-list">{{post.created.strftime("%b %d, %Y")}}</li>
-                        <li class="content-list"><span class="fontawesome-comments-alt lightseagreen"></span>&nbsp;Comment</li>
-                        <li class="content-list"><button name="val" value="{{post.key().id()}},dislike" class="rate-button"><span class="fontawesome-thumbs-down lightseagreen"></span></button></li>
-                        <li class="content-list"><button name="val" value="{{post.key().id()}},like" class="rate-button"><span class="fontawesome-thumbs-up lightseagreen"></span></button>&nbsp;{{post.like}}</li>
-                    </form>
+                    <li class="banner-list"><a href="/login">Login</a><small> if you're a member</small></li>
+                    <li class="banner-list"><small>Or </small><a href="/signup">Sign Up</a> <small>if you're not yet a member?</small></li>
                 </ul>
             </div>
-            <div class="content">
-                <pre class="lyrics">{{post.content}}</pre>
+            <div id="contents">
+                {% for post in posts %}
+                    <div class="post">
+                        <div class="title">{{post.subject}}</div>
+                        <div class="created">
+                            <ul>
+                                <form method="post">
+                                    <li class="content-list">{{post.created_by}}</li>
+                                    <li class="content-list">{{post.created.strftime("%b %d, %Y")}}</li>
+                                    <li class="content-list"><span class="fontawesome-comments-alt lightseagreen"></span>&nbsp;{{post.comment}}</li>
+                                    <li class="content-list"><button name="val" value="{{post.key().id()}},dislike" class="rate-button"><span class="fontawesome-thumbs-down lightseagreen"></span></button></li>
+                                    <li class="content-list"><button name="val" value="{{post.key().id()}},like" class="rate-button"><span class="fontawesome-thumbs-up lightseagreen"></span></button>&nbsp;{{post.like}}</li>
+                                </form>
+                            </ul>
+                        </div>
+                        <div class="content">
+                            <pre class="lyrics">{{post.content}}</pre>
+                        </div>
+                    </div>
+                {% endfor %}
             </div>
         </div>
-    {% endfor %}
-{% endblock %}
+    </body>
+</html>

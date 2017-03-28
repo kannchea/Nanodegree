@@ -72,6 +72,7 @@ class Post(db.Model):
     content = db.TextProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     created_by = db.StringProperty(required = True)
+    comment = db.IntegerProperty(default = 0)
     like = db.IntegerProperty(default = 0)
 
 #### Base class Handler
@@ -93,24 +94,47 @@ class FrontPage(Handler):
         posts = db.GqlQuery("select * from Post order by created DESC limit 10")
         self.render("front_page.html", posts=posts, username=username)
     def post(self):
-        username = self.request.cookies.get('name')
-        val = self.request.get('val')
-        
-        post_id = val.split(',')[0]
-        vote = val.split(',')[1]
-        
-        key = db.Key.from_path('Post', int(post_id))
-        post = db.get(key)
-        
-        if vote == 'like':  
-            post.like += 1
-        else:
-            post.like -= 1
+        self.redirect('/login')
             
-        post.put()
-                    
+
+#### Welcome
+class Welcome(Handler):
+    def get(self):
+        username = self.request.cookies.get('name')
         posts = db.GqlQuery("select * from Post order by created DESC limit 10")
-        self.render("front_page.html", posts=posts, username=username)
+        self.render("welcome.html", posts=posts, username=username)
+    def post(self):
+        username = self.request.cookies.get('name')
+        
+        if username:
+            val = self.request.get('val')
+
+            post_id = val.split(',')[0]
+            vote = val.split(',')[1]
+
+            key = db.Key.from_path('Post', int(post_id))
+            post = db.get(key)
+            
+            if post.created_by == username:
+                error = "You can't like/dislike your own post."
+                posts = db.GqlQuery("select * from Post order by created DESC limit 10")
+                self.render("welcome.html", posts=posts, username=username, error=error)
+                
+            else:
+                if vote == 'like':  
+                    post.like += 1
+                    print post.like 
+                else:
+                    post.like -= 1
+
+                post.put()
+
+                posts = db.GqlQuery("select * from Post order by created DESC limit 10")
+
+                self.render("welcome.html", posts=posts, username=username)
+        
+        else:
+            self.redirect('/login')
         
 #### Profile Page
 class Profile(Handler):
@@ -206,7 +230,7 @@ class SignUp(Handler):
             cookie_val = "name=" + user_name + "; password=" + password + "; Path=/"
             cookie_val = cookie_val.encode('utf8')
             self.response.headers.add_header('Set-Cookie', cookie_val)
-            self.redirect("/")
+            self.redirect("/welcome")
         
         
 ##### Welcome page
@@ -253,7 +277,7 @@ class Login(Handler):
             cookie_val = "name=" + user_name + "; password=" + password + "; Path=/"
             cookie_val = cookie_val.encode('utf8')
             self.response.headers.add_header('Set-Cookie', cookie_val)
-            self.redirect("/")
+            self.redirect("/welcome")
 
 #### Logout
 class Logout(Handler):
@@ -263,6 +287,7 @@ class Logout(Handler):
         
 app = webapp2.WSGIApplication([
     ('/', FrontPage),
+    ('/welcome', Welcome),
     ('/profile', Profile),
     ('/newpost', NewPost),
     ('/([0-9]+)', PostHandler),
