@@ -50,15 +50,9 @@
 .content {
     width: 100%;
     order: 3;
-    border-top: 1px solid gray;
+    border-top: 1px solid #d2d2d2;
     padding-top: 15px;
     padding-bottom: 15px;
-}
-
-hr {
-    display: none;
-    margin-top: 5px;
-    margin-bottom: 10px;
 }
 
 input {
@@ -83,12 +77,12 @@ button {
     background-color: lightseagreen;
     color: white;
     border-style: none;
+    cursor: pointer;
 }
 
 .rate-button {
     background-color: white;
     width: 20px;
-    cursor: pointer;
 }
 
 .error {
@@ -127,6 +121,10 @@ a {
     padding-left: 0;
 }
 
+.content-list:first-child {
+    padding-right: 20px;
+}
+
 .title {
     width: 50%;
     float: left;
@@ -147,6 +145,62 @@ a {
     color: lightseagreen;
 }
 
+.comment {
+    text-align: left;
+    margin: auto;
+    width: 90%;
+    background-color: whitesmoke;
+    margin-bottom: 20px;
+}
+
+.comment-content {
+    height: 100px;
+    width: 550px;
+    margin: 0;
+}
+
+.comment-form {
+    padding: 20px;
+}
+
+hr {
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+.comment-thread {
+    padding: 20px;
+}
+
+.commented-on {
+    font-size: 12px;
+    font-weight: 100;
+    color: lightseagreen;
+}
+
+.comment-text {
+    padding: 10px;
+    padding-bottom: 20px;
+}
+
+.comment-text p {
+    padding-bottom: 0px;
+    padding-top: 10px;
+}
+
+.comment-ul {
+    list-style-type: none;
+    margin-right: 0;
+    padding-right: 0;
+    text-align: right;
+    border-bottom: 1px solid white;
+    height: 30px;
+}
+
+.comment-button {
+    background-color: whitesmoke;
+}
+
 @media screen and (max-width: 940px) {
     .title {
         width: 100%;
@@ -156,11 +210,15 @@ a {
     .created {
         width: 100%;
         order: 3;
-        border-top: 1px solid gray;
+        border-top: 1px solid #d2d2d2;
     }
 
     .content {
         width: 100%;
         order: 2;
+    }
+    
+    .comment-content {
+        max-width: 100%;
     }
 }

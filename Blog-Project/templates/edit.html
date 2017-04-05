@@ -3,11 +3,12 @@
 {% block content %}
     <h2>Enter Your Favorite Song Lyrics</h2>
     <form method="post">
-        <input type="text" name="subject" placeholder="Title" value={{subject}}>
+        <input type="text" name="subject" placeholder="Title" value='{{subject}}'>
         <br>
         <textarea type="text" name="content" placeholder="Lyrics">{{content}}</textarea>
         <br>
         <p>{{error}}</p>
         <button>UPDATE</button>
+        <button onclick="location.href='/{{post_id}}'">CANCEL</button>
     </form>
 {% endblock %}

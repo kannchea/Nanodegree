@@ -74,6 +74,22 @@ class Post(db.Model):
     created_by = db.StringProperty(required = True)
     comment = db.IntegerProperty(default = 0)
     like = db.IntegerProperty(default = 0)
+    
+
+#### Comment Instace
+class Comment(db.Model):
+    comment = db.StringProperty(required = True)
+    created = db.DateTimeProperty(auto_now_add = True)
+    post_id = db.StringProperty(required = True)
+    commented_by = db.StringProperty(required = True)
+
+
+#### Post Like
+class PostLiked(db.Model):
+    user = db.ReferenceProperty(User, collection_name = 'post_liked')
+    liked = db.StringProperty()
+    disliked = db.StringProperty()
+
 
 #### Base class Handler
 class Handler(webapp2.RequestHandler):
@@ -113,10 +129,11 @@ class Welcome(Handler):
             action = action.split(',')[1]
             key = db.Key.from_path('Post', int(post_id))
             post = db.get(key)
-                
+            
             if action == 'delete':
                 if post.created_by == username:
                     post.delete()
+                    db.get(key)                    
                 else:
                     error = "You can only delete your post."
 
@@ -128,29 +145,51 @@ class Welcome(Handler):
 
             ##### Like or Dislike
             else:
-                if post.created_by == username:
-                    error = "You can't like/dislike your own post."
-                else:
-                    if vote == 'like':  
-                        post.like += 1
-                        print post.like 
-                    else:
-                        post.like -= 1
+            	checker = True
+            	if username == post.created_by:
+            		error = "You can't like/dislike your own post."
+            		checker = False
 
-                    post.put()
-                    
-            posts = db.GqlQuery("select * from Post order by created DESC limit 10")
-            self.render("welcome.html", posts=posts, username=username, error=error)
+            	if checker:
+	            	user = User.all().filter('name =', username).get()
+
+	            	liked = user.post_liked.filter('liked =', post_id).get()
+	            	disliked = user.post_liked.filter('disliked =', post_id).get()
+
+        		if action == 'like':
+        			if disliked:
+        				PostLiked(user=user, liked=post_id).put()
+        				user.post_liked.filter('disliked =', post_id).get().delete()
+        				post.like += 1
+        				post.put()
+        				db.get(key)
+        			elif liked:
+        				error = "You've already liked this post."
+        			else:
+        				PostLiked(user=user, liked=post_id).put()
+        				post.like += 1
+        				post.put()
+        				db.get(key)
+        		else:
+        			if liked:
+        				PostLiked(user=user, disliked=post_id).put()
+        				user.post_liked.filter('liked =', post_id).get().delete()
+        				post.like -= 1
+        				post.put()
+        				db.get(key)
+        			elif disliked:
+        				error = "You've already disliked this post."
+        			else:
+        				PostLiked(user=user, disliked=post_id).put()
+        				post.like -= 1
+        				post.put()
+        				db.get(key)
+
+            posts = db.GqlQuery("select * from Post order by created DESC limit 10")        
+            self.render("welcome.html", posts=posts, username=username, error=error, like=post.like)
         
         else:
             self.redirect('/login')
-        
-#### Profile Page
-class Profile(Handler):
-    def get(self):
-        username = self.request.cookies.get('name')
-        posts = Post.all().filter('created_by =', username)
-        self.render("profile.html", posts=posts, username=username)
         
 #### Add new post
 class NewPost(Handler):
@@ -179,6 +218,8 @@ class Edit(Handler):
         post_id = self.request.get('post_id')
         key = db.Key.from_path('Post', int(post_id))
         post = db.get(key)
+
+        print post.subject
         self.render("edit.html", subject=post.subject, content=post.content, username=username)
         
     def post (self):
@@ -211,7 +252,61 @@ class PostHandler(Handler):
             return
         
         username = self.request.cookies.get('name')
-        self.render("post.html", post = post, username=username)
+        comments = Comment.all().filter('post_id =', post_id).order('-created')
+
+        self.render("post.html", comments = comments, post=post, post_id=post_id, username=username)
+    
+    def post(self, post_id):
+        post_key = db.Key.from_path('Post', int(post_id))        
+        post = db.get(post_key)
+        
+        if not post:
+            self.error(404)
+            return
+        
+        username = self.request.cookies.get('name')
+
+        if username:
+            comment = self.request.get('comment')
+            error = ''
+            action = self.request.get('action')
+            
+            if comment:
+                c = Comment(comment = comment, post_id = post_id, commented_by = username)
+                c.put()
+                c_id = c.key().id()
+                c_key = db.Key.from_path('Comment', int(c_id))  
+                # print(c_id)
+                # print(type(c_id))
+                db.get(c_key)
+
+                post.comment += 1
+                post.put()
+                db.get(post_key)
+
+            if action:
+                comment_id = action.split(',')[0]
+                action = action.split(',')[1]
+                c_key = db.Key.from_path('Comment', int(comment_id))
+                comment = db.get(c_key)
+
+                if comment.commented_by == username:
+                    comment.delete()
+                    db.get(c_key)                   
+                    post.comment -= 1
+                    if(post.comment < 0):
+                        post.comment = 0
+                    post.put() 
+                    db.get(post_key)                   
+                else:
+                    error = "You can only delete your own comment."
+            
+            comments = Comment.all().filter('post_id =', post_id).order('-created')
+
+            self.render("post.html", comments = comments, post=post, post_id=post_id, username=username, error=error)
+
+        else:
+            self.redirect('/login')
         
 #### Sign Up
 class SignUp(Handler):
@@ -279,7 +374,12 @@ class SignUp(Handler):
 #### Login
 class Login(Handler):
     def get(self):
-        self.render("login.html")
+    	username = self.request.cookies.get('name')
+
+    	if username:
+    		self.redirect('/welcome')
+    	else:
+        	self.render("login.html")
     def post(self):
         
         user_name = self.request.get('username')
@@ -325,7 +425,6 @@ class Logout(Handler):
 app = webapp2.WSGIApplication([
     ('/', FrontPage),
     ('/welcome', Welcome),
-    ('/profile', Profile),
     ('/newpost', NewPost),
     ('/edit', Edit),
     ('/([0-9]+)', PostHandler),
