@@ -32,9 +32,16 @@
                     <h3>{{comment.commented_by}} <span class="commented-on">&nbsp;&nbsp;&nbsp;{{comment.created.strftime("%b %d, %Y")}}</span></h3>
                     <p>{{comment.comment}}</p>
                     <form method="post"> 
+                        <div id="edit-comment-div">
+                            <textarea id="edit-comment" name="edit_comment">{{comment.comment}}</textarea>
+                            <br>
+                            <button onclick="closeForm()">Cancel</button>
+                            <button name="action" value="{{comment.key().id()}},edit">Submit</button>
+                        </div>
                         <div class="comment-action">
                             <ul class="comment-ul">
                                     <li class="content-list"><button name="action" value="{{comment.key().id()}},delete" class="comment rate-button"><span class="fontawesome-trash lightseagreen"></span></button></li>
+                                    <li class="content-list"><button onclick="openForm()" class="comment rate-button"><span class="fontawesome-edit lightseagreen"></span></button></li>
                             </ul>
                         </div>
                     </form>
@@ -42,5 +49,19 @@
             {% endfor %}
         </div>
     </div>
+
+    <script>
+        function openForm() {
+            event.preventDefault();
+            var x = document.getElementById('edit-comment-div');
+                x.style.display = 'block';
+        }
+
+        function closeForm() {
+            event.preventDefault();
+            var x = document.getElementById('edit-comment-div');
+                x.style.display = 'none';
+        }
+    </script>
 
 {% endblock %}

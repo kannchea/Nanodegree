@@ -201,6 +201,16 @@ hr {
     background-color: whitesmoke;
 }
 
+#edit-comment-div {
+    display: none;
+}
+
+#edit-comment {
+    width: 550px;
+    height: 100px;
+    margin-left: 0;
+}
+
 @media screen and (max-width: 940px) {
     .title {
         width: 100%;
