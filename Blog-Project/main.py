@@ -51,10 +51,12 @@ def valid_email(email):
 # Hash Password
 
 def make_salt():
+    ''' return random 5 random letters '''
     return ''.join(random.choice(string.lowercase) for i in range(5))
 
 
 def make_pw_hash(name, pw):
+    ''' return a pair of salt and the hashed password '''
     salt = make_salt()
     h = hashlib.sha256(name + pw + salt).hexdigest()
     return '%s,%s' % (h, salt)
@@ -62,6 +64,7 @@ def make_pw_hash(name, pw):
 
 # Validate Password
 def valid_pw(name, pw, h):
+    ''' return True if password and the hashed password are the same '''
     salt = h.split(",")[1]
     hash_pw = hashlib.sha256(name + pw + salt).hexdigest()
     return hash_pw == h.split(',')[0]
@@ -70,16 +73,19 @@ def valid_pw(name, pw, h):
 # Hash Cookie
 
 def hash_str(s):
+    ''' return a hashed string to be used in make_secure_val '''
     return hashlib.md5(s).hexdigest()
 
 
 def make_secure_val(s):
+    ''' return a pair of value and its hashed '''
     HASH = hash_str(s)
     return '%s|%s' % (s, HASH)
 
 
 # Validate Cookie
 def valid_val(h):
+    ''' return the cookie value if it's valid '''
     s = h.split("|")
     if hash_str(s[0]) == s[1]:
         return s[0]
@@ -93,6 +99,7 @@ jinja_env = jinja2.Environment(
 # User Instance
 
 class User(db.Model):
+    ''' a user object that will be stored in the database '''
     name = db.StringProperty(required=True)
     pw_hash = db.StringProperty(required=True)
     email = db.StringProperty()
@@ -101,6 +108,7 @@ class User(db.Model):
 # Post Instance
 
 class Post(db.Model):
+    ''' a post object that will be stored in the database '''
     subject = db.StringProperty(required=True)
     content = db.TextProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)
@@ -112,6 +120,7 @@ class Post(db.Model):
 # Comment Instace
 
 class Comment(db.Model):
+    ''' a comment object that will be stored in the database '''
     comment = db.StringProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)
     post_id = db.StringProperty(required=True)
@@ -121,6 +130,7 @@ class Comment(db.Model):
 # Post Like
 
 class PostLiked(db.Model):
+    ''' an object for each post that is liked or disliked and will be stored in the database '''
     user = db.ReferenceProperty(User, collection_name='post_liked')
     liked = db.StringProperty()
     disliked = db.StringProperty()
