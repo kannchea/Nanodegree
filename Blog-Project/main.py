@@ -78,6 +78,10 @@ class Welcome(Handler):
             key = db.Key.from_path('Post', int(post_id))
             post = db.get(key)
 
+            if not post:
+                self.error(404)
+                return
+
             if action == 'delete':
                 if post.created_by == username:
                     post.delete()
@@ -196,9 +200,13 @@ class Edit(Handler):
         		key = db.Key.from_path('Post', int(post_id))
         		post = db.get(key)
 
-        		self.render(
-        			"edit.html", subject=post.subject, content=post.content,
-        			username=username)
+                if not post:
+                    self.error(404)
+                    return
+
+                self.render(
+                    "edit.html", subject=post.subject, content=post.content,
+                    username=username)
 
         self.redirect('/login')
 
@@ -208,6 +216,10 @@ class Edit(Handler):
         post_id = self.request.get('post_id')
         key = db.Key.from_path('Post', int(post_id))
         post = db.get(key)
+
+        if not post:
+            self.error(404)
+            return
 
         if username:
         	subject = self.request.get('subject')
@@ -261,6 +273,10 @@ class PostHandler(Handler):
         post_key = db.Key.from_path('Post', int(post_id))
         post = db.get(post_key)
 
+        if not post:
+            self.error(404)
+            return
+
         name = self.request.cookies.get('name')
 
         if name:
@@ -289,6 +305,10 @@ class PostHandler(Handler):
                     action = action.split(',')[1]
                     c_key = db.Key.from_path('Comment', int(comment_id))
                     comment = db.get(c_key)
+
+                    if not comment:
+                        self.error(404)
+                        return
 
                     if action == 'delete':
                         if comment.commented_by == username:
