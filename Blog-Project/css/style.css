@@ -42,6 +42,10 @@
     order: 1;
 }
 
+.gray {
+    color: gray;
+}
+
 .created {
     width: 60%;
     order: 2;

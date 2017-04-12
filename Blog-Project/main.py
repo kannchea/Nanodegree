@@ -50,9 +50,6 @@ class FrontPage(Handler):
 
         self.render("front_page.html", posts=posts)
 
-    def post(self):
-        self.redirect('/login')
-
 
 # Welcome
 
@@ -249,10 +246,10 @@ class PostHandler(Handler):
             return
 
         name = self.request.cookies.get('name')
-        username = validation.valid_val(name)
+        username = ''
 
-        if not username:
-        	username = ''
+        if name:
+            username = validation.valid_val(name)
 
         comments = Comment.all().filter('post_id =', post_id).order('-created')
 
@@ -265,65 +262,65 @@ class PostHandler(Handler):
         post = db.get(post_key)
 
         name = self.request.cookies.get('name')
-        username = validation.valid_val(name)
 
-        if username:
-            comment = self.request.get('comment')
-            error = ''
-            action = self.request.get('action')
+        if name:
+            username = validation.valid_val(name)
+            if username:
+                comment = self.request.get('comment')
+                error = ''
+                action = self.request.get('action')
 
-            if comment:
-                c = Comment(
-                    comment=comment, post_id=post_id, commented_by=username)
-                c.put()
-                c_id = c.key().id()
-                c_key = db.Key.from_path('Comment', int(c_id))
-                # print(c_id)
-                # print(type(c_id))
-                db.get(c_key)
+                if comment:
+                    c = Comment(
+                        comment=comment, post_id=post_id, commented_by=username)
+                    c.put()
+                    c_id = c.key().id()
+                    c_key = db.Key.from_path('Comment', int(c_id))
+                    # print(c_id)
+                    # print(type(c_id))
+                    db.get(c_key)
 
-                post.comment += 1
-                post.put()
-                db.get(post_key)
+                    post.comment += 1
+                    post.put()
+                    db.get(post_key)
 
-            if action:
-                comment_id = action.split(',')[0]
-                action = action.split(',')[1]
-                c_key = db.Key.from_path('Comment', int(comment_id))
-                comment = db.get(c_key)
+                if action:
+                    comment_id = action.split(',')[0]
+                    action = action.split(',')[1]
+                    c_key = db.Key.from_path('Comment', int(comment_id))
+                    comment = db.get(c_key)
 
-                if action == 'delete':
-                    if comment.commented_by == username:
-                        comment.delete()
-                        db.get(c_key)
-                        post.comment -= 1
-
-                        if(post.comment < 0):
-                            post.comment = 0
-                            post.put()
-                            db.get(post_key)
-                    else:
-                        error = "You can only delete your own comment."
-
-                if action == 'edit':
-                    if comment.commented_by == username:
-                        edit_comment = self.request.get('edit_comment')
-                        if comment:
-                            comment.comment = edit_comment
-                            comment.put()
+                    if action == 'delete':
+                        if comment.commented_by == username:
+                            comment.delete()
                             db.get(c_key)
-                    else:
-                        error = "You can only edit you own comment."
+                            post.comment -= 1
 
-            comments = Comment.all().filter(
-                'post_id =', post_id).order('-created')
+                            if(post.comment < 0):
+                                post.comment = 0
+                                post.put()
+                                db.get(post_key)
+                        else:
+                            error = "You can only delete your own comment."
 
-            self.render(
-                "post.html", comments=comments, post=post, post_id=post_id,
-                username=username, error=error)
+                    if action == 'edit':
+                        if comment.commented_by == username:
+                            edit_comment = self.request.get('edit_comment')
+                            if comment:
+                                comment.comment = edit_comment
+                                comment.put()
+                                db.get(c_key)
+                        else:
+                            error = "You can only edit you own comment."
 
-        else:
-            self.redirect('/login')
+                comments = Comment.all().filter(
+                    'post_id =', post_id).order('-created')
+
+                self.render(
+                    "post.html", comments=comments, post=post, post_id=post_id,
+                    username=username, error=error)
+
+        self.redirect('/login')
 
 
 # Sign Up
