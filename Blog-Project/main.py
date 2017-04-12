@@ -16,124 +16,15 @@ import os
 
 import jinja2
 import webapp2
-import string
-import re
-import random
-import hashlib
 
-from google.appengine.ext import db
+import validation
 
-
-# Global Method
-# User's Info Validation
-
-
-def render_str(template, **params):
-    t = jinja_env.get_template(template)
-    return t.render(params)
-
-
-def valid_username(username):
-    USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
-    return USER_RE.match(username)
-
-
-def valid_password(password):
-    PASSWORD_RE = re.compile(r"^.{3,20}$")
-    return PASSWORD_RE.match(password)
-
-
-def valid_email(email):
-    EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
-    return EMAIL_RE.match(email)
-
-
-# Hash Password
-
-def make_salt():
-    ''' return random 5 random letters '''
-    return ''.join(random.choice(string.lowercase) for i in range(5))
-
-
-def make_pw_hash(name, pw):
-    ''' return a pair of salt and the hashed password '''
-    salt = make_salt()
-    h = hashlib.sha256(name + pw + salt).hexdigest()
-    return '%s,%s' % (h, salt)
-
-
-# Validate Password
-def valid_pw(name, pw, h):
-    ''' return True if password and the hashed password are the same '''
-    salt = h.split(",")[1]
-    hash_pw = hashlib.sha256(name + pw + salt).hexdigest()
-    return hash_pw == h.split(',')[0]
-
-
-# Hash Cookie
-
-def hash_str(s):
-    ''' return a hashed string to be used in make_secure_val '''
-    return hashlib.md5(s).hexdigest()
-
-
-def make_secure_val(s):
-    ''' return a pair of value and its hashed '''
-    HASH = hash_str(s)
-    return '%s|%s' % (s, HASH)
-
-
-# Validate Cookie
-def valid_val(h):
-    ''' return the cookie value if it's valid '''
-    s = h.split("|")
-    if hash_str(s[0]) == s[1]:
-        return s[0]
+from model import *
 
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(
     loader=jinja2.FileSystemLoader(template_dir), autoescape=True)
-
-
-# User Instance
-
-class User(db.Model):
-    ''' a user object that will be stored in the database '''
-    name = db.StringProperty(required=True)
-    pw_hash = db.StringProperty(required=True)
-    email = db.StringProperty()
-
-
-# Post Instance
-
-class Post(db.Model):
-    ''' a post object that will be stored in the database '''
-    subject = db.StringProperty(required=True)
-    content = db.TextProperty(required=True)
-    created = db.DateTimeProperty(auto_now_add=True)
-    created_by = db.StringProperty(required=True)
-    comment = db.IntegerProperty(default=0)
-    like = db.IntegerProperty(default=0)
-
-
-# Comment Instace
-
-class Comment(db.Model):
-    ''' a comment object that will be stored in the database '''
-    comment = db.StringProperty(required=True)
-    created = db.DateTimeProperty(auto_now_add=True)
-    post_id = db.StringProperty(required=True)
-    commented_by = db.StringProperty(required=True)
-
-
-# Post Like
-
-class PostLiked(db.Model):
-    ''' an object for each post that is liked or disliked and will be stored in the database '''
-    user = db.ReferenceProperty(User, collection_name='post_liked')
-    liked = db.StringProperty()
-    disliked = db.StringProperty()
 
 
 # Base class Handler
@@ -167,19 +58,20 @@ class FrontPage(Handler):
 
 class Welcome(Handler):
     def get(self):
-        h = self.request.cookies.get('name')
-        username = valid_val(h)
+        name = self.request.cookies.get('name')
 
-        if username:
-            posts = db.GqlQuery(
-                "select * from Post order by created DESC limit 10")
-            self.render("welcome.html", posts=posts, username=username)
-        else:
-            self.redirect('/login')
+        if name:
+            username = validation.valid_val(name)
+            if username:
+                posts = db.GqlQuery(
+                    "select * from Post order by created DESC limit 10")
+                self.render("welcome.html", posts=posts, username=username)
+
+        self.redirect('/login')
 
     def post(self):
         name = self.request.cookies.get('name')
-        username = valid_val(name)
+        username = validation.valid_val(name)
 
         if username:
             error = ''
@@ -197,6 +89,7 @@ class Welcome(Handler):
                     error = "You can only delete your post."
 
             elif action == 'edit':
+                # call Edit handler if user is the owner
                 if post.created_by == username:
                     self.redirect('/edit?post_id=%s' % post_id)
                 else:
@@ -216,36 +109,36 @@ class Welcome(Handler):
                     disliked = user.post_liked.filter(
                         'disliked =', post_id).get()
 
-                if action == 'like':
-                    if disliked:
-                        PostLiked(user=user, liked=post_id).put()
-                        user.post_liked.filter(
-                            'disliked =', post_id).get().delete()
-                        post.like += 1
-                        post.put()
-                        db.get(key)
-                    elif liked:
-                        error = "You've already liked this post."
+                    if action == 'like':
+                        if disliked:
+                            PostLiked(user=user, liked=post_id).put()
+                            user.post_liked.filter(
+                                'disliked =', post_id).get().delete()
+                            post.like += 1
+                            post.put()
+                            db.get(key)
+                        elif liked:
+                            error = "You've already liked this post."
+                        else:
+                            PostLiked(user=user, liked=post_id).put()
+                            post.like += 1
+                            post.put()
+                            db.get(key)
                     else:
-                        PostLiked(user=user, liked=post_id).put()
-                        post.like += 1
-                        post.put()
-                        db.get(key)
-                else:
-                    if liked:
-                        PostLiked(user=user, disliked=post_id).put()
-                        user.post_liked.filter(
-                            'liked =', post_id).get().delete()
-                        post.like -= 1
-                        post.put()
-                        db.get(key)
-                    elif disliked:
-                        error = "You've already disliked this post."
-                    else:
-                        PostLiked(user=user, disliked=post_id).put()
-                        post.like -= 1
-                        post.put()
-                        db.get(key)
+                        if liked:
+                            PostLiked(user=user, disliked=post_id).put()
+                            user.post_liked.filter(
+                                'liked =', post_id).get().delete()
+                            post.like -= 1
+                            post.put()
+                            db.get(key)
+                        elif disliked:
+                                error = "You've already disliked this post."
+                        else:
+                            PostLiked(user=user, disliked=post_id).put()
+                            post.like -= 1
+                            post.put()
+                            db.get(key)
 
             posts = db.GqlQuery(
                 "select * from Post order by created DESC limit 10")
@@ -262,16 +155,17 @@ class Welcome(Handler):
 class NewPost(Handler):
     def get(self):
         name = self.request.cookies.get('name')
-        username = valid_val(name)
 
-        if username:
-            self.render("newpost.html", username=username)
-        else:
-            self.redirect('/login')
+        if name:
+            username = validation.valid_val(name)
+            if username:
+                self.render("newpost.html", username=username)
+
+        self.redirect('/login')
 
     def post(self):
         name = self.request.cookies.get('name')
-        username = valid_val(name)
+        username = validation.valid_val(name)
 
         if username:
             subject = self.request.get('subject')
@@ -297,42 +191,48 @@ class NewPost(Handler):
 class Edit(Handler):
     def get(self):
         name = self.request.cookies.get('name')
-        username = valid_val(name)
 
-        if username:
-            post_id = self.request.get('post_id')
-            key = db.Key.from_path('Post', int(post_id))
-            post = db.get(key)
+        if name:
+        	username = validation.valid_val(name)
+        	if username:
+        		post_id = self.request.get('post_id')
+        		key = db.Key.from_path('Post', int(post_id))
+        		post = db.get(key)
 
-            self.render(
-                "edit.html", subject=post.subject, content=post.content,
-                username=username)
-        else:
-            self.redirect('/login')
+        		self.render(
+        			"edit.html", subject=post.subject, content=post.content,
+        			username=username)
+
+        self.redirect('/login')
 
     def post(self):
         name = self.request.cookies.get('name')
-        username = valid_val(name)
+        username = validation.valid_val(name)
+        post_id = self.request.get('post_id')
+        key = db.Key.from_path('Post', int(post_id))
+        post = db.get(key)
 
         if username:
-            subject = self.request.get('subject')
-            content = self.request.get('content')
-            post_id = self.request.get('post_id')
-            key = db.Key.from_path('Post', int(post_id))
-            post = db.get(key)
+        	subject = self.request.get('subject')
+        	content = self.request.get('content')
 
-            if subject and content:
-                post.subject = subject
-                post.content = content
-                post.put()
+        	if username == post.created_by:
+        		if subject and content:
+        			post.subject = subject
+        			post.content = content
+        			post.put()
 
-                self.redirect("/%s" % str(post.key().id()))
-
-            else:
-                error = "subject and content please!"
-                self.render(
-                    "newpost.html", subject=subject, content=content,
-                    error=error, username=username)
+        			self.redirect("/%s" % str(post.key().id()))
+        		else:
+        			error = "subject and content please!"
+        			self.render(
+        				"edit.html", subject=subject, content=content,
+        				error=error, username=username)
+        	else:
+        		error = "Oops, you can only edit your own post."
+        		self.render(
+        			"edit.html", subject=subject, content=content,
+        			error=error, username=username)
         else:
             self.redirect('/login')
 
@@ -349,7 +249,10 @@ class PostHandler(Handler):
             return
 
         name = self.request.cookies.get('name')
-        username = valid_val(name)
+        username = validation.valid_val(name)
+
+        if not username:
+        	username = ''
 
         comments = Comment.all().filter('post_id =', post_id).order('-created')
 
@@ -361,12 +264,8 @@ class PostHandler(Handler):
         post_key = db.Key.from_path('Post', int(post_id))
         post = db.get(post_key)
 
-        if not post:
-            self.error(404)
-            return
-
         name = self.request.cookies.get('name')
-        username = valid_val(name)
+        username = validation.valid_val(name)
 
         if username:
             comment = self.request.get('comment')
@@ -438,10 +337,10 @@ class SignUp(Handler):
         pass_word = self.request.get('password')
         email_ = self.request.get('email')
 
-        username = valid_username(user_name)
-        password = valid_password(pass_word)
+        username = validation.valid_username(user_name)
+        password = validation.valid_password(pass_word)
         verify = self.request.get('verify')
-        email = valid_email(email_)
+        email = validation.valid_email(email_)
 
         username_err = ""
         password_err = ""
@@ -481,12 +380,12 @@ class SignUp(Handler):
                 email_err=email_err, email=email_)
 
         else:
-            password = make_pw_hash(user_name, pass_word)
+            password = validation.make_pw_hash(user_name, pass_word)
 
             u = User(name=user_name, pw_hash=password, email=email_)
             u.put()
 
-            name = make_secure_val(user_name)
+            name = validation.make_secure_val(user_name)
             cookie_val = "name=" + name + "; password=" + password + "; Path=/"
 
             cookie_val = cookie_val.encode('utf8')
@@ -499,21 +398,20 @@ class SignUp(Handler):
 class Login(Handler):
     def get(self):
         name = self.request.cookies.get('name')
-
         if name:
-            username = valid_val(name)
-            if username:
-                self.redirect('/welcome')
-        else:
-            self.render("login.html")
+        	username = validation.valid_val(name)
+        	if username:
+        		self.redirect('/welcome')
+
+        self.render("login.html")
 
     def post(self):
 
         user_name = self.request.get('username')
         pass_word = self.request.get('password')
 
-        username = valid_username(user_name)
-        password = valid_password(pass_word)
+        username = validation.valid_username(user_name)
+        password = validation.valid_password(pass_word)
 
         checker = False
         error = ''
@@ -527,7 +425,7 @@ class Login(Handler):
         if password and username:
             u = User.all().filter('name =', user_name).get()
             if u:
-                valid = valid_pw(user_name, pass_word, u.pw_hash)
+                valid = validation.valid_pw(user_name, pass_word, u.pw_hash)
                 if not valid:
                     error = "Invalid login."
                     checker = True
@@ -537,8 +435,8 @@ class Login(Handler):
         if checker:
             self.render("login.html", username=user_name, error=error)
         else:
-            password = make_pw_hash(user_name, pass_word)
-            name = make_secure_val(user_name)
+            password = validation.make_pw_hash(user_name, pass_word)
+            name = validation.make_secure_val(user_name)
             cookie_val =\
             "name=" + name + "; password=" + password + "; Path=/"
 

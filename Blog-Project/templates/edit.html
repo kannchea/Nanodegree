@@ -7,8 +7,15 @@
         <br>
         <textarea type="text" name="content">{{content}}</textarea>
         <br>
-        <p>{{error}}</p>
+        <p class="error">{{error}}</p>
         <button>UPDATE</button>
-        <button onclick="location.href='/{{post_id}}'">CANCEL</button>
+        <button onclick="cancel()">CANCEL</button>
     </form>
+
+    <script type="text/javascript">
+        function cancel() {
+            event.preventDefault();
+            window.location.href='/welcome';
+        }
+    </script>
 {% endblock %}

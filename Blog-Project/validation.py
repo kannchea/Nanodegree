@@ -4,6 +4,8 @@ import re
 import random
 import hashlib
 
+from model import *
+
 
 def render_str(template, **params):
     t = jinja_env.get_template(template)
@@ -58,5 +60,8 @@ def make_secure_val(s):
 # Validate Cookie
 def valid_val(h):
     s = h.split("|")
+    user = User.all().filter('name =', s[0]).get()
+
     if hash_str(s[0]) == s[1]:
-        return s[0]
+        if s[0] == user.name:
+            return s[0]
