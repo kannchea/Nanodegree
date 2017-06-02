@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content%}
+    <h3 class="error">{{error}}</h3>
+    <div class="post">
+        <div class="title"><a class="post_url" href="/{{post.key().id()}}">{{post.subject}}</a></div>
+        <div class="created">
+            <ul>
+                <form method="post">
+                    <li class="content-list">{{post.created_by}}</li>
+                    <li class="content-list">{{post.created.strftime("%b %d, %Y")}}</li>
+                    <li class="content-list"><a class="post_url" href="/{{post.key().id()}}"><span class="fontawesome-comments-alt lightseagreen"></span>&nbsp;{{post.comment}}</a></li>
+                    <li class="content-list"><button name="action" value="{{post.key().id()}},dislike" class="rate-button"><span class="fontawesome-thumbs-down lightseagreen"></span></button></li>
+                    <li class="content-list"><button name="action" value="{{post.key().id()}},like" class="rate-button"><span class="fontawesome-thumbs-up lightseagreen"></span></button>&nbsp;{{post.like}}</li>
+                </form>
+            </ul>
+        </div>
+        <div class="content">
+            <pre class="lyrics">{{post.content}}</pre>
+        </div>
+    </div>
+
+    <div class="comment">
+        <form method="post" class="comment-form">
+            <textarea class="comment-content" name="comment" placeholder="Leave your comment here."></textarea><br>
+            <button>Submit</button>
+        </form>
+        
+        <hr>
+        
+        <div class="comment-thread">
+            <p class="error">{{error}}</p>
+            {% for comment in comments %}
+                <div class="comment-text">
+                    <h3>{{comment.commented_by}} <span class="commented-on">&nbsp;&nbsp;&nbsp;{{comment.created.strftime("%b %d, %Y")}}</span></h3>
+                    <p>{{comment.comment}}</p>
+                    <form method="post"> 
+                        <div class="comment-action">
+                            <ul class="comment-ul">
+                                    <li class="content-list"><button name="action" value="{{comment.key().id()}},delete" class="comment rate-button"><span class="fontawesome-trash lightseagreen"></span></button></li>
+                            </ul>
+                        </div>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+{% endblock %}

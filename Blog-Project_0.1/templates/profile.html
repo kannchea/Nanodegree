@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content%}
+    {% for post in posts %}
+        <div class="post">
+            <div class="title">{{post.subject}}</div>
+            <div class="created">
+                <ul>
+                    <form method="post">
+                        <li class="content-list">{{post.created_by}}</li>
+                        <li class="content-list">{{post.created.strftime("%b %d, %Y")}}</li>
+                        <li class="content-list"><span class="fontawesome-comments-alt lightseagreen"></span>&nbsp;Comment</li>
+                        <li class="content-list"><button name="action" value="{{post.key().id()}},dislike" class="rate-button"><span class="fontawesome-thumbs-down lightseagreen"></span></button></li>
+                        <li class="content-list"><button name="action" value="{{post.key().id()}},like" class="rate-button"><span class="fontawesome-thumbs-up lightseagreen"></span></button>&nbsp;{{post.like}}</li>
+                    </form>
+                </ul>
+            </div>
+            <div class="content">
+                <pre class="lyrics">{{post.content}}</pre>
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}
